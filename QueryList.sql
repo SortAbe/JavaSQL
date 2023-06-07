@@ -1,13 +1,11 @@
-SELECT firstName, LastName FROM student;
-SELECT COUNT(*) FROM class;
-SELECT COUNT(*) FROM classroom;
-SELECT COUNT(*) FROM course;
-SELECT COUNT(*) FROM department;
-SELECT COUNT(*) FROM instructor;
-SELECT COUNT(*) FROM sAddress;
-SELECT COUNT(*) FROM sContact;
-SELECT COUNT(*) FROM student;
-SELECT COUNT(*) FROM tAddress;
-SELECT COUNT(*) FROM tContact;
-SELECT COUNT(*) FROM takes;
-SELECT COUNT(*) FROM teaches;
+--O(1)?
+SELECT MAX(registration) FROM student;
+SELECT MIN(registartion) FROM student;
+
+--O(n)
+SELECT student.fistName, student.lastName, course.title FROM student
+JOIN takes ON student.ID = takes.ID
+JOIN course ON takes.course_id = course.course_id
+WHERE title LIKE "Introduction to Anthropology";
+
+--O(logn)

@@ -13,9 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BenchThread implements Runnable{
+
 	public String[] FemaleNames;
 	public String[] MaleNames;
 	public String[] LastNames;
+	public String[] cities;
+	public String[] states;
+	public String[] courses;
+	public String[] departments;
+	public String[] college;
 
 	public static String[] ReadTable(String query){
 		Connection conn = null;
@@ -112,6 +118,12 @@ public class BenchThread implements Runnable{
 		this.FemaleNames = BenchThread.ReadTable("SELECT name FROM femaleNames;");
 		this.MaleNames = BenchThread.ReadTable("SELECT name FROM maleNames;");
 		this.LastNames = BenchThread.ReadTable("SELECT name FROM lastNames;");
+		this.cities = BenchThread.ReadTable("SELECT DISTINCT city FROM sAddress;");
+		this.states = BenchThread.ReadTable("SELECT DISTINCT state FROM sAddress;");
+		this.courses = BenchThread.ReadTable("SELECT title FROM course;");
+		this.departments = BenchThread.ReadTable("SELECT dept_name FROM departments;");
+		this.college = BenchThread.ReadTable("SELECT DISTINCT college FROM departments;");
+
 		try {
 			Thread.sleep(10_000);
 		} catch(InterruptedException ex) {
