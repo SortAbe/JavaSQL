@@ -1,3 +1,6 @@
+//Abrahan Diaz
+//Version 0.5
+//All the things she said
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -10,6 +13,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BenchThread implements Runnable{
+	public String[] FemaleNames;
+	public String[] MaleNames;
+	public String[] LastNames;
+
+	public static String[] ReadTable(String query){
+		Connection conn = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		String[] stringResults = new String[5000];
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			conn = DriverManager.getConnection("jdbc:mysql://abenobashi.xyz:7707/University?" + "user=py&password=password123!");
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			int index = 0;
+			while(rs.next()){
+				stringResults[index] = rs.getString("name");
+				index++;
+			}
+			conn.close();
+		} catch (SQLException ex) {
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		} catch (ClassNotFoundException classexception){
+			System.out.println("Did not find the driver");
+		}
+		return stringResults;
+	}
 
 	private static String[] read(String path){
 		List<String> lines = new ArrayList<>();
@@ -76,6 +108,16 @@ public class BenchThread implements Runnable{
 
 	@Override
 	public void run(){
+
+		this.FemaleNames = BenchThread.ReadTable("SELECT name FROM femaleNames;");
+		this.MaleNames = BenchThread.ReadTable("SELECT name FROM maleNames;");
+		this.LastNames = BenchThread.ReadTable("SELECT name FROM lastNames;");
+		try {
+			Thread.sleep(10_000);
+		} catch(InterruptedException ex) {
+			System.out.println("Thread is kill!");
+		}
+
 		long[] times = BenchThread.query(BenchThread.read("QueryList.sql"));
 		for (long time: times) {
 			try{
