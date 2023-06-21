@@ -5,10 +5,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.ResultSet;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -17,24 +17,25 @@ public class BenchThread implements Runnable{
 
 	private static String url = "jdbc:mysql://abenobashi.xyz:7707/University?user=py&password=password123!";
 
-	public String[] FemaleNames;
-	public String[] MaleNames;
-	public String[] LastNames;
-	public String[] cities;
-	public String[] states;
-	public String[] courses;
-	public String[] departments;
-	public String[] college;
+	public static String[] FemaleNames;
+	public static String[] MaleNames;
+	public static String[] LastNames;
+	public static String[] cities;
+	public static String[] states;
+	public static String[] courses;
+	public static String[] departments;
+	public static String[] college;
+	public static String femk = "#FEM#", malk = "#MAL#", lask = "#LAS#", citk = "#CIT#", stak = "#STA#", cork = "#COR#", depk = "#DEP#", colk = "#COL#";
 
 	public BenchThread(){
-		if(this.FemaleNames != null) this.FemaleNames = BenchThread.ReadTable("SELECT name FROM femaleNames;", "name");
-		if(this.MaleNames != null) this.MaleNames = BenchThread.ReadTable("SELECT name FROM maleNames;", "name");
-		if(this.LastNames != null) this.LastNames = BenchThread.ReadTable("SELECT name FROM lastNames;", "name");
-		if(this.cities != null) this.cities = BenchThread.ReadTable("SELECT DISTINCT city FROM sAddress;", "city");
-		if(this.states != null) this.states = BenchThread.ReadTable("SELECT DISTINCT state FROM sAddress;", "state");
-		if(this.courses != null) this.courses = BenchThread.ReadTable("SELECT title FROM course;", "title");
-		if(this.departments != null) this.departments = BenchThread.ReadTable("SELECT dept_name FROM departments;", "dept_name");
-		if(this.college != null) this.college = BenchThread.ReadTable("SELECT DISTINCT college FROM departments;", "college");
+		FemaleNames = BenchThread.ReadTable("SELECT name FROM femaleNames;", "name");
+		MaleNames = BenchThread.ReadTable("SELECT name FROM maleNames;", "name");
+		LastNames = BenchThread.ReadTable("SELECT name FROM lastNames;", "name");
+		cities = BenchThread.ReadTable("SELECT DISTINCT city FROM sAddress;", "city");
+		states = BenchThread.ReadTable("SELECT DISTINCT state FROM sAddress;", "state");
+		courses = BenchThread.ReadTable("SELECT title FROM course;", "title");
+		departments = BenchThread.ReadTable("SELECT dept_name FROM departments;", "dept_name");
+		college = BenchThread.ReadTable("SELECT DISTINCT college FROM departments;", "college");
 		BenchThread.query(BenchThread.read("WakeUp.sql"));
 	}
 
@@ -44,6 +45,38 @@ public class BenchThread implements Runnable{
 		} catch(InterruptedException ex) {
 			System.out.println("Thread is kill!");
 		}
+	}
+
+	public static String generate(String key){
+		Random random = new Random();
+		String out = "";
+		switch(key){
+			case "#FEM#": 
+				out = FemaleNames[random.nextInt(0, FemaleNames.length)];
+				break;
+			case "#MAL#": 
+				out = MaleNames[random.nextInt(0, MaleNames.length)];
+				break;
+			case "#LAS#": 
+				out = LastNames[random.nextInt(0, LastNames.length)];
+				break;
+			case "#CIT#": 
+				out = cities[random.nextInt(0, cities.length)];
+				break;
+			case "#STA#": 
+				out = states[random.nextInt(0, states.length)];
+				break;
+			case "#COR#": 
+				out = courses[random.nextInt(0, courses.length)];
+				break;
+			case "#DEP#": 
+				out = departments[random.nextInt(0, departments.length)];
+				break;
+			case "#COL#": 
+				out = college[random.nextInt(0, college.length)];
+				break;
+		}
+		return out;
 	}
 
 	public static String[] ReadTable(String query, String column){
@@ -78,6 +111,14 @@ public class BenchThread implements Runnable{
 			String query = "";
 			while((line = br.readLine()) != null){
 				if (line.trim().equals("") || (line.charAt(0) == '-' && line.charAt(1) == '-')) continue;
+				line = line.replaceAll( femk, generate( femk));
+				line = line.replaceAll( malk, generate( malk));
+				line = line.replaceAll( lask, generate( lask));
+				line = line.replaceAll( citk, generate( citk));
+				line = line.replaceAll( stak, generate( stak));
+				line = line.replaceAll( cork, generate( cork));
+				line = line.replaceAll( depk, generate( depk));
+				line = line.replaceAll( colk, generate( colk));
 				if(!line.contains(";")) query += line; 
 				else{
 					query += line; 
@@ -85,12 +126,13 @@ public class BenchThread implements Runnable{
 					query = "";
 				}
 			}
+			br.close();
 		}catch(IOException e){
 			System.out.println("File is missing or not readable!");
 		}
 		return lines.toArray(new String[0]);
 	}
-	
+
 	private static long[] query(String[] queries){
 		long[] executionTime = new long[queries.length];
 		try {
@@ -127,7 +169,7 @@ public class BenchThread implements Runnable{
 	@Override
 	public void run(){
 		Random random = new Random();
-		long standOff = (long) random.nextDouble() * 1000l;
+		long standOff = (long) (random.nextDouble() * 3000l);
 		sleep(standOff);
 
 		long[] times = BenchThread.query(BenchThread.read("QueryList.sql"));
