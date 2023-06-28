@@ -21,6 +21,14 @@ public class BenchThread implements Runnable{
 	private static String port = System.getenv("dbport");
 	private static String user = System.getenv("dbuser");
 	public static String url = "jdbc:mysql://" + server + ":" + port + "/University?user=" + user + "&password=" + pass;
+	
+	private static String serverAux = System.getenv("serverAux");
+	private static String passAux = System.getenv("dbpassAux");
+	private static String portAux = System.getenv("dbportAux");
+	private static String userAux = System.getenv("dbuserAux");
+	public static String urlAux = "jdbc:mysql://" + serverAux + ":" + portAux
+		+ "/University?user=" + userAux + "&password=" + passAux;
+	private static String table;
 
 	public static String[] FemaleNames, MaleNames, LastNames;
 	public static String[] cities, states;
@@ -30,7 +38,21 @@ public class BenchThread implements Runnable{
 	public static String citk = "#CIT#", stak = "#STA#";
 	public static String cork = "#COR#", depk = "#DEP#", colk = "#COL#";
 
-	public BenchThread(){
+	public BenchThread(String BatchID){
+		table = BatchID;
+		try{
+			Connection conn = DriverManager.getConnection(url);
+			Statement stmt = conn.createStatement();
+			stmt.executeUpdate("CREATE TABLE " + table + "(" +
+					"queryId INT," +
+					"query VARCHAR(400)," +
+					"time INT);");
+			conn.close();
+		} catch (SQLException ex) {
+			System.out.println("Constructor SQLException: " + ex.getMessage());
+			System.out.println("Constructor SQLState: " + ex.getSQLState());
+			System.out.println("Constructor VendorError: " + ex.getErrorCode());
+		} 
 		FemaleNames = BenchThread.ReadTable("SELECT name FROM femaleNames;", "name");
 		MaleNames = BenchThread.ReadTable("SELECT name FROM maleNames;", "name");
 		LastNames = BenchThread.ReadTable("SELECT name FROM lastNames;", "name");
@@ -39,7 +61,6 @@ public class BenchThread implements Runnable{
 		courses = BenchThread.ReadTable("SELECT title FROM course;", "title");
 		department = BenchThread.ReadTable("SELECT dept_name FROM department;", "dept_name");
 		college = BenchThread.ReadTable("SELECT DISTINCT college FROM department;", "college");
-
 		BenchThread.query(BenchThread.read("WakeUp.sql"));
 	}
 
@@ -86,24 +107,36 @@ public class BenchThread implements Runnable{
 	public static String[] ReadTable(String query, String column){
 		List<String> results = new ArrayList<>();
 		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection conn = DriverManager.getConnection(url);
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
-			int index = 0;
 			while(rs.next()){
 				results.add(rs.getString(column));
-				index++;
 			}
 			conn.close();
 		} catch (SQLException ex) {
 			System.out.println("SQLException: " + ex.getMessage());
 			System.out.println("SQLState: " + ex.getSQLState());
 			System.out.println("VendorError: " + ex.getErrorCode());
-		} catch (ClassNotFoundException classexception){
-			System.out.println("Did not find the driver");
-		}
+		} 
 		return results.toArray(new String[0]);
+	}
+
+	public static void WriteTable(String[] queries, String db){
+		try {
+			Connection conn = DriverManager.getConnection(db);
+			conn.setAutoCommit(false);
+			Statement stmt = conn.createStatement();
+			for (String query : queries) {
+				stmt.executeUpdate(query);
+			}
+			conn.commit();
+			conn.close();
+		} catch (SQLException ex) {
+			System.out.println("WriteTable SQLException: " + ex.getMessage());
+			System.out.println("WriteTable SQLState: " + ex.getSQLState());
+			System.out.println("WriteTable VendorError: " + ex.getErrorCode());
+		} 
 	}
 
 	private static String[] read(String path){
@@ -140,8 +173,8 @@ public class BenchThread implements Runnable{
 	private static long[] query(String[] queries){
 		long[] executionTime = new long[queries.length];
 		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection conn = DriverManager.getConnection(url);
+			conn.setAutoCommit(false);
 			Statement stmt = conn.createStatement();
 			ResultSet rs = null;
 			int index = 0;
@@ -149,7 +182,7 @@ public class BenchThread implements Runnable{
 				if(query == null) break;
 				if(query.contains("INSERT") || query.contains("UPDATE") || query.contains("DELETE") || query.contains("REPLACE")) {
 					long start = System.currentTimeMillis();
-					rs = stmt.executeQuery(query);
+					stmt.executeUpdate(query);
 					conn.commit();
 					executionTime[index] = System.currentTimeMillis() - start;
 				}else{
@@ -164,8 +197,6 @@ public class BenchThread implements Runnable{
 			System.out.println("SQLException: " + ex.getMessage());
 			System.out.println("SQLState: " + ex.getSQLState());
 			System.out.println("VendorError: " + ex.getErrorCode());
-		} catch (ClassNotFoundException classexception){
-			System.out.println("Did not find the driver");
 		}
 		return executionTime;
 	}
@@ -176,10 +207,15 @@ public class BenchThread implements Runnable{
 		Random random = new Random();
 		long standOff = (long) (random.nextDouble() * 3000l);
 		sleep(standOff);
-		long[] times = BenchThread.query(BenchThread.read("QueryList.sql"));
-		for (long time: times) {
-			System.out.println(time);
-			sleep(200);
+
+		String[] queries = BenchThread.read("QueryList.sql");
+		long[] times = BenchThread.query(queries);
+
+		String[] results = new String[times.length];
+		for (int i = 0; i < times.length; i++) {
+			results[i] = "INSERT INTO " + table + " VALUES(" + i + ", \"" 
+				+ queries[i].replaceAll("'[^']+'", "___") + "\", " + times[i] + ");";
 		}
+		WriteTable(results, url);
 	}
 }

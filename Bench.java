@@ -6,7 +6,7 @@ public class Bench{
 	public static void main(String[] args){
 		int count = Integer.parseInt(args[0]);
 		Thread[] threads = new Thread[count];
-		BenchThread bt = new BenchThread();
+		BenchThread bt = new BenchThread(args[1]);
 		for(int i = 0; i < count; i++) threads[i] = new Thread(bt, "Threadsss");
 		for(int j = 0; j < count; j++) threads[j].start();
 		try{
