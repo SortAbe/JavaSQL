@@ -3,9 +3,11 @@
 //All the things she said
 
 //TODO
+//Will need a recepie style reader that will allow me to edit the test with simple text file.
+//Need to start staging this week.
 //Need to detach databases
 //shuffle and mix use
-//
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -19,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Collections;
 import java.util.Random;
+
 
 public class BenchThread implements Runnable {
 
