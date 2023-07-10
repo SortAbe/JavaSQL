@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -234,6 +235,21 @@ public class BenchThread implements Runnable {
 			index = -1;
 		}
 		return queries.toArray(new String[queries.size()]);
+	}
+
+	public void recepie(){
+		try{
+			FileReader fr = new FileReader("recepie");
+			BufferedReader br = new BufferedReader(fr);
+			String line = "";
+			while ((line = br.readLine()) != null) {
+				System.out.println(line);
+			}
+		} catch(FileNotFoundException e){
+			System.out.println("Recepie seems to be missing?");
+		} catch(IOException e){
+			System.out.println("Error while reading the file recepie");
+		}
 	}
 
 	@Override
