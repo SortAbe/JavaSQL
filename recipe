@@ -1,0 +1,5 @@
+#comma seperated arguments
+#lists, actions, number of runs
+where insert, shuffle mix 5, 3
+join, shuffle, 2
+join where, , 3

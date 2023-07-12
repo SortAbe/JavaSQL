@@ -220,41 +220,94 @@ public class BenchThread implements Runnable {
 		return queries;
 	}
 
-	private static String[] mix(String[] writes, String[] reads, int split){
+	private static String[] mix(String[] left, String[] right, int split){
 		double splitd = (double) (split / 100d);
 		List<String> queries = new ArrayList<>();
 		Random random = new Random();
 		int index = -1;
 		if(random.nextDouble() < splitd) {
-			while(index < 0 && index > writes.length) index = (int) (random.nextDouble() * writes.length);
-			queries.add(writes[index]);
+			while(index < 0 && index > left.length) index = (int) (random.nextDouble() * left.length);
+			queries.add(left[index]);
 			index = -1;
 		} else {
-			while(index < 0 && index > reads.length) index = (int) (random.nextDouble() * reads.length);
-			queries.add(reads[(int) (random.nextDouble() * reads.length)]);
+			while(index < 0 && index > right.length) index = (int) (random.nextDouble() * right.length);
+			queries.add(right[(int) (random.nextDouble() * right.length)]);
 			index = -1;
 		}
 		return queries.toArray(new String[queries.size()]);
 	}
 
-	public void recepie(){
+	public static String[] recipe(){
+		String[] output = new String[0];
 		try{
-			FileReader fr = new FileReader("recepie");
+			FileReader fr = new FileReader("recipe");
 			BufferedReader br = new BufferedReader(fr);
-			String line = "";
+			List<String[]> queries = new ArrayList<>();
+			String[] mixed = new String[100];
+			String line; 
+			boolean mixxed = false;
 			while ((line = br.readLine()) != null) {
-				System.out.println(line);
+				mixed = new String[100];
+				mixxed = false;
+				if (line.charAt(0) == '#') continue;
+				String[] files = line.split(",")[0].split(" ");
+				for (String file : files) {
+					queries.add(BenchThread.read(file + ".sql"));
+				}
+				String[] actions = line.split(",")[1].split(" ");
+				for (int i = 0; i < actions.length; i++) {
+					if (actions[i].equals("shuffle")) {
+						for (int j = 0; j < queries.size(); j++) {
+							BenchThread.shuffle(queries.get(j));
+						}
+					}
+					if (actions[i].equals("mix")) {
+						mixxed = true;
+						mixed = BenchThread.mix(queries.get(queries.size() - 2), 
+								queries.get(queries.size() - 1), Integer.parseInt(actions[i+1]));
+						queries.remove(queries.size() - 2);
+						queries.remove(queries.size() - 1);
+						queries.add(mixed);
+					}
+				}
+				int multiplier = Integer.parseInt(line.split(",")[2]);
+				if (mixxed) {
+					while (multiplier > 0) {
+						queries.add(queries.get(queries.size()-1));
+						multiplier--;
+					}
+				} else {
+					while (multiplier > 0) {
+						queries.add(queries.get(queries.size()-2));
+						queries.add(queries.get(queries.size()-1));
+						multiplier--;
+					}
+				}
 			}
+			int totalSize = 0;
+			for (String[] query : queries) {
+				totalSize += query.length;
+			}
+			output = new String[totalSize];
+			int index = 0;
+			for (String[] query : queries) {
+				for (int i = 0; i < query.length; i++) {
+					output[index] = query[i];
+					index++;
+				}
+			}
+			br.close();
 		} catch(FileNotFoundException e){
 			System.out.println("Recepie seems to be missing?");
 		} catch(IOException e){
 			System.out.println("Error while reading the file recepie");
 		}
+		return output;
 	}
 
 	@Override
 	public void run() {
-
+		//BenchThread.recipe();
 		Random random = new Random();
 		long standOff = (long) (random.nextDouble() * 3000l);
 		sleep(standOff);
