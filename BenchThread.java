@@ -3,10 +3,8 @@
 //All the things she said
 
 //TODO
-//Will need a recepie style reader that will allow me to edit the test with simple text file.
 //Need to start staging this week.
 //Need to detach databases
-//shuffle and mix use
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -49,20 +47,20 @@ public class BenchThread implements Runnable {
 	public static String cork = "#COR#", depk = "#DEP#", colk = "#COL#";
 
 	public BenchThread(String BatchID) {
-		table = BatchID;
-		try {
-			Connection conn = DriverManager.getConnection(url);
-			Statement stmt = conn.createStatement();
-			stmt.executeUpdate("CREATE TABLE " + table + "(" +
-				"queryId INT," +
-				"query VARCHAR(400)," +
-				"time INT);");
-			conn.close();
-		} catch (SQLException ex) {
-			System.out.println("Constructor SQLException: " + ex.getMessage());
-			System.out.println("Constructor SQLState: " + ex.getSQLState());
-			System.out.println("Constructor VendorError: " + ex.getErrorCode());
-		}
+//		table = BatchID;
+//		try {
+//			Connection conn = DriverManager.getConnection(url);
+//			Statement stmt = conn.createStatement();
+//			stmt.executeUpdate("CREATE TABLE " + table + "(" +
+//				"queryId INT," +
+//				"query VARCHAR(400)," +
+//				"time INT);");
+//			conn.close();
+//		} catch (SQLException ex) {
+//			System.out.println("Constructor SQLException: " + ex.getMessage());
+//			System.out.println("Constructor SQLState: " + ex.getSQLState());
+//			System.out.println("Constructor VendorError: " + ex.getErrorCode());
+//		}
 		FemaleNames = BenchThread.readTable("SELECT name FROM femaleNames;", "name");
 		MaleNames = BenchThread.readTable("SELECT name FROM maleNames;", "name");
 		LastNames = BenchThread.readTable("SELECT name FROM lastNames;", "name");
@@ -264,13 +262,13 @@ public class BenchThread implements Runnable {
 					if (actions[i].equals("mix")) {
 						mixxed = true;
 						mixed = BenchThread.mix(queries.get(queries.size() - 2), 
-								queries.get(queries.size() - 1), Integer.parseInt(actions[i+1]));
+								queries.get(queries.size() - 1), Integer.parseInt(actions[i+1].trim()));
 						queries.remove(queries.size() - 2);
 						queries.remove(queries.size() - 1);
 						queries.add(mixed);
 					}
 				}
-				int multiplier = Integer.parseInt(line.split(",")[2]);
+				int multiplier = Integer.parseInt(line.split(",")[2].trim());
 				if (mixxed) {
 					while (multiplier > 0) {
 						queries.add(queries.get(queries.size()-1));
@@ -307,14 +305,12 @@ public class BenchThread implements Runnable {
 
 	@Override
 	public void run() {
-		//BenchThread.recipe();
 		Random random = new Random();
 		long standOff = (long) (random.nextDouble() * 3000l);
 		sleep(standOff);
-
-		String[] queries = BenchThread.read("QueryList.sql");
+		String[] queries = BenchThread.recipe();
+		//String[] queries = BenchThread.read("QueryList.sql");
 		long[] times = BenchThread.query(queries);
-
 		String[] results = new String[times.length];
 		for (int i = 0; i < times.length; i++) {
 			results[i] = "INSERT INTO " + table + " VALUES(" + i + ", \""
